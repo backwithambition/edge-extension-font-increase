@@ -6,22 +6,36 @@
  * - Handling dynamic content loading
  */
 
+// Debug function to log messages to console with a prefix
+function debugLog(message, data = null) {
+  const prefix = '[Font Extension]';
+  if (data) {
+    console.log(prefix, message, data);
+  } else {
+    console.log(prefix, message);
+  }
+}
+
 // Store original font sizes to allow toggling
-const originalFontSizes = new WeakMap();
+const originalFontSizes = new Map();
 
 // Main function to increase font size
 function increaseFontSize(settings) {
-  if (!settings || !settings.enabled) {
+  if (!settings) {
+    debugLog('Extension is disabled or settings are missing');
+    return;
+  } else if (!settings.enabled) {
+    debugLog('Extension is disabled, restoring original font sizes');
     return;
   }
 
   // Check if current domain is in whitelist/blacklist
   const currentUrl = window.location.href;
   const hostname = window.location.hostname;
-  
+
   // Determine if we should apply changes based on domain lists
   let shouldApply = true;
-  
+
   if (settings.domains && settings.domains.length > 0) {
     const matchesDomain = settings.domains.some(domain => {
       if (domain.isRegex) {
@@ -33,20 +47,17 @@ function increaseFontSize(settings) {
           return false;
         }
       } else {
-        // Non-regex matches URL start
         return hostname.startsWith(domain.value) || hostname === domain.value;
       }
     });
-    
-    // Apply based on list type
+
     shouldApply = settings.listType === 'whitelist' ? matchesDomain : !matchesDomain;
   }
-  
+
   if (!shouldApply) {
     return;
   }
-  
-  // Walk through all text nodes and apply font size changes
+
   const textNodes = [];
   const walker = document.createTreeWalker(
     document.body,
@@ -54,48 +65,56 @@ function increaseFontSize(settings) {
     null,
     false
   );
-  
+
   let node;
   while (node = walker.nextNode()) {
     if (node.nodeValue.trim().length > 0) {
       textNodes.push(node);
     }
   }
-  
+
+  let changedNodes = 0;
+  let skippedNodes = 0;
+  let thresholdSkipped = 0;
+
   textNodes.forEach(textNode => {
     const parentElement = textNode.parentElement;
-    if (!parentElement) return;
-    
-    // Skip if parent is a script or style tag
-    if (['SCRIPT', 'STYLE'].includes(parentElement.tagName)) {
+    if (!parentElement || ['SCRIPT', 'STYLE'].includes(parentElement.tagName)) {
+      skippedNodes++;
       return;
     }
-    
+
     const computedStyle = window.getComputedStyle(parentElement);
     const currentSize = parseFloat(computedStyle.fontSize);
-    
-    // Store original size if not already stored
+
     if (!originalFontSizes.has(parentElement)) {
       originalFontSizes.set(parentElement, currentSize);
     }
-    
-    // Apply font size change if below threshold
+
     if (currentSize < settings.threshold) {
       let newSize;
-      
       if (settings.increaseMethod.type === 'fixed') {
         newSize = settings.increaseMethod.value;
-      } else { // multiplier
+      } else {
         newSize = currentSize * settings.increaseMethod.value;
       }
-      
       parentElement.style.fontSize = `${newSize}${settings.increaseMethod.unit}`;
+      changedNodes++;
+    } else {
+      thresholdSkipped++;
     }
   });
+
+  debugLog(`Font processing complete. Modified: ${changedNodes} elements`);
 }
 
 // Initialize and listen for settings changes
 chrome.storage.local.get('settings', (result) => {
+  if (chrome.runtime.lastError) {
+    debugLog('Error retrieving settings:', chrome.runtime.lastError);
+    return;
+  }
+
   if (result.settings) {
     increaseFontSize(result.settings);
   }

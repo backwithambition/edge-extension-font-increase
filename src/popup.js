@@ -68,8 +68,8 @@ function saveSettings() {
   
   // Validate increase value
   const increaseValue = parseFloat(increaseValueInput.value);
-  if (isNaN(increaseValue) || increaseValue < 0.1) {
-    valueError.textContent = 'Please enter a valid number (min: 0.1)';
+  if (isNaN(increaseValue) || increaseValue < 1 || !Number.isInteger(increaseValue)) {
+    valueError.textContent = 'Please enter a valid integer (min: 1)';
     isValid = false;
   } else {
     valueError.textContent = '';
@@ -96,7 +96,7 @@ function saveSettings() {
     increaseMethod: {
       type: increaseTypeSelect.value,
       unit: unitSelect.value,
-      value: increaseValue
+      value: parseInt(increaseValueInput.value)
     },
     listType: listTypeSelect.value,
     domains: domains

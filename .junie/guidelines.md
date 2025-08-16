@@ -96,12 +96,27 @@ For manual testing of the extension:
 
 2. Content script debugging:
    - Open DevTools on any page where the extension is active
-   - Navigate to the "Sources" tab
-   - Look for content scripts under "Content scripts" in the file tree
+   - Navigate to the "Console" tab
+   - Look for logs with the prefix "[Font Extension Debug]"
+   - These logs provide detailed information about:
+     - Script initialization
+     - Settings retrieval
+     - Domain whitelist/blacklist checks
+     - Text node processing
+     - Font size calculations and changes
+     - Event handling
+     - Dynamic content handling
+   - To view content script source, go to the "Sources" tab and look under "Content scripts"
 
 3. Storage inspection:
    - In the background page DevTools
    - Run in console: `chrome.storage.local.get(null, console.log)`
+
+4. Common debugging scenarios:
+   - If no debug logs appear in the console, the content script may not be loading
+   - If logs show "Extension is disabled or settings are missing", check the popup UI
+   - If logs show "Not applying font changes due to domain list settings", check whitelist/blacklist
+   - If logs show "Font size processing complete" with "Changed: 0", check the threshold setting
 
 ## Security Considerations
 - Validate all user inputs, especially regex patterns
