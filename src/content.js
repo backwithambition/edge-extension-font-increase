@@ -18,6 +18,25 @@ function debugLog(message, data = null) {
 
 // Store original font sizes to allow toggling
 const originalFontSizes = new Map();
+debugLog(`CREATING NEW MAP`);
+
+// Cleanup function to clear the Map and prevent memory leaks
+function cleanupMemory() {
+  debugLog(`Cleaning up memory - clearing ${originalFontSizes.size} stored font sizes`);
+  originalFontSizes.clear();
+}
+
+// Add event listeners for page unload events to cleanup memory
+window.addEventListener('beforeunload', cleanupMemory);
+window.addEventListener('pagehide', cleanupMemory);
+
+// Also cleanup when the document is about to be unloaded
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    // Page might be getting unloaded or suspended
+    cleanupMemory();
+  }
+});
 
 // Main function to increase font size
 function increaseFontSize(settings) {
@@ -26,6 +45,12 @@ function increaseFontSize(settings) {
     return;
   } else if (!settings.enabled) {
     debugLog('Extension is disabled, restoring original font sizes');
+
+    // Iterate through all elements with stored original sizes
+    for (const [element, originalSize] of originalFontSizes.entries()) {
+      element.style.fontSize = `${originalSize}px`;
+    }
+    debugLog(`Restored original font sizes for ${originalFontSizes.size} elements`);
     return;
   }
 
@@ -47,10 +72,12 @@ function increaseFontSize(settings) {
           return false;
         }
       } else {
+        // Non-regex matches URL start
         return hostname.startsWith(domain.value) || hostname === domain.value;
       }
     });
 
+    // Apply based on list type
     shouldApply = settings.listType === 'whitelist' ? matchesDomain : !matchesDomain;
   }
 
@@ -58,6 +85,7 @@ function increaseFontSize(settings) {
     return;
   }
 
+  // Walk through all text nodes and apply font size changes
   const textNodes = [];
   const walker = document.createTreeWalker(
     document.body,
@@ -87,10 +115,12 @@ function increaseFontSize(settings) {
     const computedStyle = window.getComputedStyle(parentElement);
     const currentSize = parseFloat(computedStyle.fontSize);
 
+    // Store original size if not already stored
     if (!originalFontSizes.has(parentElement)) {
       originalFontSizes.set(parentElement, currentSize);
     }
 
+    // Apply font size change if below threshold
     if (currentSize < settings.threshold) {
       let newSize;
       if (settings.increaseMethod.type === 'fixed') {
@@ -135,6 +165,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Handle dynamically loaded content
 const observer = new MutationObserver((mutations) => {
   chrome.storage.local.get('settings', (result) => {
+    if (chrome.runtime.lastError) {
+      debugLog('Error retrieving settings for dynamic content:', chrome.runtime.lastError);
+      return;
+    }
+
+    // Always call increaseFontSize when we have settings, regardless of enabled state
+    // This ensures restoration logic runs when extension is disabled
     if (result.settings && result.settings.enabled) {
       increaseFontSize(result.settings);
     }

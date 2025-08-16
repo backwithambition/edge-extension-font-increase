@@ -7,26 +7,80 @@
   <style>
     body {
       width: 300px;
-      padding: 10px;
-      font-family: Arial, sans-serif;
+      padding: 20px;
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #0078d7;
     }
     .form-group {
       margin-bottom: 15px;
     }
     label {
-      display: block;
-      margin-bottom: 5px;
       font-weight: bold;
+      margin-bottom: 8px;
+      display: inline-block;
+      font-size: 14px;
     }
-    input, select {
+    input[type="number"], select, input[type="text"] {
       width: 100%;
-      padding: 5px;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
       box-sizing: border-box;
+      margin-top: 5px;
     }
     .toggle {
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: '';
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #0078d7;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
     }
     .domain-list {
       margin-top: 10px;
@@ -34,26 +88,26 @@
       overflow-y: auto;
       border: 1px solid #ccc;
       padding: 5px;
-    }
-    .domain-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
+      border-radius: 5px;
     }
     button {
-      padding: 8px 12px;
+      padding: 8px 15px;
       background-color: #0078d7;
       color: white;
       border: none;
+      border-radius: 5px;
       cursor: pointer;
-      margin-right: 5px;
+      font-size: 14px;
     }
     button:hover {
-      background-color: #0063b1;
+      background-color: #0056a4;
+    }
+    button + button {
+      margin-left: 5px;
     }
     .error {
-      color: red;
       font-size: 12px;
+      color: red;
       margin-top: 5px;
     }
   </style>
@@ -63,36 +117,39 @@
   
   <div class="form-group toggle">
     <label for="enabled">Enable Extension</label>
-    <input type="checkbox" id="enabled">
+    <div class="toggle-switch">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </div>
   </div>
-  
+
   <div class="form-group">
     <label for="threshold">Font Size Threshold (px)</label>
     <input type="number" id="threshold" min="1" max="100">
     <div id="threshold-error" class="error"></div>
   </div>
   
-  <div class="form-group">
-    <label for="increase-type">Increase Method</label>
-    <select id="increase-type">
-      <option value="fixed">Fixed Size</option>
-      <option value="multiplier">Multiplier</option>
-    </select>
-  </div>
-  
-  <div class="form-group">
-    <label for="increase-value">Value</label>
-    <input type="number" id="increase-value" min="1" step="1">
-    <div id="value-error" class="error"></div>
-  </div>
-  
-  <div class="form-group">
-    <label for="unit">Unit</label>
-    <select id="unit">
-      <option value="px">px</option>
-      <option value="em">em</option>
-      <option value="rem">rem</option>
-    </select>
+  <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+    <div style="flex: 2;">
+      <label for="increase-type">Increase Method</label>
+      <select id="increase-type">
+        <option value="fixed">Fixed Size</option>
+        <option value="multiplier">Multiplier</option>
+      </select>
+    </div>
+    <div style="flex: 1;">
+      <label for="increase-value">Value</label>
+      <input type="number" id="increase-value" min="1" step="1">
+      <div id="value-error" class="error"></div>
+    </div>
+    <div style="flex: 1;">
+      <label for="unit">Unit</label>
+      <select id="unit">
+        <option value="px">px</option>
+        <option value="em">em</option>
+        <option value="rem">rem</option>
+      </select>
+    </div>
   </div>
   
   <div class="form-group">
@@ -106,20 +163,26 @@
   <div class="form-group">
     <label>Domains</label>
     <div class="domain-list" id="domain-list"></div>
-    <div style="display: flex; margin-top: 5px;">
-      <label for="new-domain"></label><input type="text" id="new-domain" placeholder="example.com">
+    <div style="display: flex; align-items: center; margin-top: 5px;">
+      <input type="text" id="new-domain" placeholder="example.com" style="flex: 1; margin-right: 5px;">
       <input type="checkbox" id="is-regex" title="Treat as regex">
       <button id="add-domain">Add</button>
     </div>
     <div id="domain-error" class="error"></div>
   </div>
   
-  <div class="form-group">
-    <button id="export">Export Settings</button>
-    <button id="import">Import Settings</button>
+  <!-- Other settings go here -->
+
+  <div class="form-group" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9;">
+    <h3 style="margin-top: 0; font-size: 16px; color: #333; text-align: center;">Settings Management</h3>
+    
+    <div style="display: flex; justify-content: space-between; gap: 10px;">
+      <button id="export" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Export Settings</button>
+      <button id="import" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Import Settings</button>
+    </div>
+    
     <input type="file" id="import-file" style="display: none;">
   </div>
-  
   <script src="popup.js"></script>
 </body>
 </html>

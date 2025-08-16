@@ -153,6 +153,22 @@ function addDomainToList(domain, isRegex) {
 
 // Event listeners
 enabledToggle.addEventListener('change', saveSettings);
+
+// Add click handler for the toggle slider to ensure it works properly
+const toggleSlider = document.querySelector('.slider');
+console.log(`ADDING SLIDER HANDLER ${toggleSlider}`);
+if (toggleSlider) {
+
+  toggleSlider.addEventListener('click', (e) => {
+    // Prevent the event from bubbling up
+    e.preventDefault();
+    // Toggle the checkbox state
+    enabledToggle.checked = !enabledToggle.checked;
+    // Trigger the change event to save settings
+    enabledToggle.dispatchEvent(new Event('change'));
+  });
+}
+
 thresholdInput.addEventListener('change', saveSettings);
 increaseTypeSelect.addEventListener('change', saveSettings);
 increaseValueInput.addEventListener('change', saveSettings);
