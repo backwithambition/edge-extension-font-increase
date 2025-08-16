@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge Increase Font</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .domain-list {
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+    .domain-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    button {
+      padding: 8px 12px;
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    button:hover {
+      background-color: #0063b1;
+    }
+    .error {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Edge Increase Font</h2>
+  
+  <div class="form-group toggle">
+    <label for="enabled">Enable Extension</label>
+    <input type="checkbox" id="enabled">
+  </div>
+  
+  <div class="form-group">
+    <label for="threshold">Font Size Threshold (px)</label>
+    <input type="number" id="threshold" min="1" max="100">
+    <div id="threshold-error" class="error"></div>
+  </div>
+  
+  <div class="form-group">
+    <label for="increase-type">Increase Method</label>
+    <select id="increase-type">
+      <option value="fixed">Fixed Size</option>
+      <option value="multiplier">Multiplier</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="increase-value">Value</label>
+    <input type="number" id="increase-value" min="1" step="0.1">
+    <div id="value-error" class="error"></div>
+  </div>
+  
+  <div class="form-group">
+    <label for="unit">Unit</label>
+    <select id="unit">
+      <option value="px">px</option>
+      <option value="em">em</option>
+      <option value="rem">rem</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="list-type">Domain List Type</label>
+    <select id="list-type">
+      <option value="whitelist">Whitelist (apply only on these domains)</option>
+      <option value="blacklist">Blacklist (don't apply on these domains)</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>Domains</label>
+    <div class="domain-list" id="domain-list"></div>
+    <div style="display: flex; margin-top: 5px;">
+      <input type="text" id="new-domain" placeholder="example.com">
+      <input type="checkbox" id="is-regex" title="Treat as regex">
+      <button id="add-domain">Add</button>
+    </div>
+    <div id="domain-error" class="error"></div>
+  </div>
+  
+  <div class="form-group">
+    <button id="export">Export Settings</button>
+    <button id="import">Import Settings</button>
+    <input type="file" id="import-file" style="display: none;">
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
