@@ -1,5 +1,5 @@
 /**
- * Background script for Edge Increase Font extension
+ * Background script for FontScaler extension
  * Handles:
  * - Auto-export functionality
  * - Communication between popup and content scripts

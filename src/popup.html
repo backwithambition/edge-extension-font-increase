@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edge Increase Font</title>
+  <title>FontScaler</title>
   <style>
     body {
       width: 300px;
@@ -23,6 +23,24 @@
     .form-group {
       margin-bottom: 15px;
     }
+
+    /* helps sizing be predictable */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* 3 columns: method wider, value/unit narrower */
+    .row-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr; /* tweak as you like */
+      gap: 8px;                            /* space between columns */
+      align-items: start;                  /* top-align each block */
+      margin-top: 8px;
+    }
+
+    .ctrl { display: flex; flex-direction: column; min-width: 0; }
+    .ctrl > label { font-size: 12px; margin-bottom: 4px; line-height: 1.1; }
+    .ctrl select,
+    .ctrl input { width: 100%; height: 32px; padding: 4px 8px; }
+
     label {
       font-weight: bold;
       margin-bottom: 8px;
@@ -113,8 +131,8 @@
   </style>
 </head>
 <body>
-  <h2>Edge Increase Font</h2>
-  
+  <h2>FontScaler</h2>
+
   <div class="form-group toggle">
     <label for="enabled">Enable Extension</label>
     <div class="toggle-switch">
@@ -128,21 +146,21 @@
     <input type="number" id="threshold" min="1" max="100">
     <div id="threshold-error" class="error"></div>
   </div>
-  
-  <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
-    <div style="flex: 2;">
+
+  <div class="row-3 form-group">
+    <div class="ctrl">
       <label for="increase-type">Increase Method</label>
       <select id="increase-type">
         <option value="fixed">Fixed Size</option>
         <option value="multiplier">Multiplier</option>
       </select>
     </div>
-    <div style="flex: 1;">
+    <div class="ctrl">
       <label for="increase-value">Value</label>
       <input type="number" id="increase-value" min="1" step="1">
       <div id="value-error" class="error"></div>
     </div>
-    <div style="flex: 1;">
+    <div class="ctrl">
       <label for="unit">Unit</label>
       <select id="unit">
         <option value="px">px</option>
@@ -151,7 +169,7 @@
       </select>
     </div>
   </div>
-  
+
   <div class="form-group">
     <label for="list-type">Domain List Type</label>
     <select id="list-type">
@@ -159,7 +177,7 @@
       <option value="blacklist">Blacklist (don't apply on these domains)</option>
     </select>
   </div>
-  
+
   <div class="form-group">
     <label for="new-domain">Domains</label>
     <div class="domain-list" id="domain-list"></div>
@@ -170,15 +188,15 @@
     </div>
     <div id="domain-error" class="error"></div>
   </div>
-  
+
   <!-- Other settings go here -->
 
   <div class="form-group" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9;">
     <h3 style="margin-top: 0; font-size: 16px; color: #333; text-align: center;">Settings Management</h3>
-    
+
     <div style="display: flex; justify-content: space-between; gap: 10px;">
-      <button id="export" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Export Settings</button>
-      <button id="import" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Import Settings</button>
+      <button id="export" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Export</button>
+      <button id="import" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Import</button>
     </div>
 
     <input type="file" id="import-file" style="display: none;">

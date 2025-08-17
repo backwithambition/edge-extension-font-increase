@@ -1,5 +1,5 @@
 /**
- * Popup script for Edge Increase Font extension
+ * Popup script for FontScaler extension
  * Handles:
  * - UI interactions
  * - Settings management

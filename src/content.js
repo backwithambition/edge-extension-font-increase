@@ -1,5 +1,5 @@
 /**
- * Content script for the "Edge Increase Font" extension
+ * Content script for the "FontScaler" extension
  * Handles:
  * - Increasing font size of text on the page
  * - Applying changes based on domain whitelist/blacklist
@@ -8,7 +8,7 @@
 
 // Debug function to log messages to the console with a prefix
 function debugLog(message, data = null) {
-	const prefix = '[Font Extension]';
+	const prefix = '[FontScaler]';
 	if (data) {
 		console.log(prefix, message, data);
 	} else {
