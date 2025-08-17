@@ -1,12 +1,12 @@
 /**
- * Content script for Edge Increase Font extension
+ * Content script for the "Edge Increase Font" extension
  * Handles:
  * - Increasing font size of text on the page
  * - Applying changes based on domain whitelist/blacklist
  * - Handling dynamic content loading
  */
 
-// Debug function to log messages to console with a prefix
+// Debug function to log messages to the console with a prefix
 function debugLog(message, data = null) {
 	const prefix = '[Font Extension]';
 	if (data) {
@@ -87,12 +87,7 @@ function increaseFontSize(settings) {
 
 	// Walk through all text nodes and apply font size changes
 	const textNodes = [];
-	const walker = document.createTreeWalker(
-		document.body,
-		NodeFilter.SHOW_TEXT,
-		null,
-		false
-	);
+	const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
 
 	let node;
 	while (node = walker.nextNode()) {
@@ -151,7 +146,7 @@ chrome.storage.local.get('settings', (result) => {
 });
 
 // Listen for messages from background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
 	if (message.action === 'settingsUpdated') {
 		chrome.storage.local.get('settings', (result) => {
 			if (result.settings) {
@@ -172,7 +167,7 @@ function isExtensionContextValid() {
 
 // Handle dynamically loaded content
 let timeout;
-const observer = new MutationObserver((mutations) => {
+const observer = new MutationObserver((_mutations) => {
 	clearTimeout(timeout);
 	timeout = setTimeout(() => {
 		if (!isExtensionContextValid()) {
@@ -196,7 +191,7 @@ const observer = new MutationObserver((mutations) => {
 		} catch (error) {
 			debugLog('Chrome API call failed:', error.message);
 		}
-	}, 100); // Debounce for 100ms
+	}, 100); // Debounce for 100 ms
 });
 
 observer.observe(document.body, {
