@@ -73,7 +73,7 @@ function increaseFontSize(settings) {
 				}
 			} else {
 				// Non-regex matches URL start
-				return hostname.startsWith(domain.value) || hostname === domain.value;
+				return hostname.endsWith(domain.value) || hostname === domain.value;
 			}
 		});
 
@@ -88,6 +88,7 @@ function increaseFontSize(settings) {
 	// Walk through all text nodes and apply font size changes
 	const textNodes = [];
 	const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+	// console.log(document.body);
 
 	let node;
 	while (node = walker.nextNode()) {
