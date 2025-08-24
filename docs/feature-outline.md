@@ -4,8 +4,7 @@ I am going to outline the core functionality of the extension in a single docume
 ### Core Functionality (Text Size Increase)
 
 - **Threshold:** Default 9px, configurable globally via input.
-- **Increase Method:** User selects via dropdown: fixed size or multiplier (e.g., 1.5x). Unit choice: em/rem/px
-  dropdown.
+- **Increase Method:** Fixed size only (no multiplier). Unit choice: em/rem/px dropdown.
 - **Text Selection:** Enlarge all displayed text nodes (DOM walk), including dynamic/lazy-loaded content.
 - **Style Application:** Use most effective approach (e.g., injected CSS + inline if needed); respect and skip !
   important styles.

@@ -9,7 +9,6 @@
 // DOM elements
 const enabledToggle = document.getElementById('enabled');
 const thresholdInput = document.getElementById('threshold');
-const increaseTypeSelect = document.getElementById('increase-type');
 const increaseValueInput = document.getElementById('increase-value');
 const unitSelect = document.getElementById('unit');
 const listTypeSelect = document.getElementById('list-type');
@@ -36,7 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		thresholdInput.value = settings.threshold || 9;
 
 		if (settings.increaseMethod) {
-			increaseTypeSelect.value = settings.increaseMethod.type || 'fixed';
+			// Migration: if legacy multiplier is found, convert it to fixed using threshold * multiplier
+			if (settings.increaseMethod.type === 'multiplier') {
+				const threshold = settings.threshold || 9;
+				const multiplier = settings.increaseMethod.value || 1.5;
+				const unit = settings.increaseMethod.unit || 'px';
+				const migratedFixed = Math.max(1, Math.round(threshold * multiplier));
+				settings.increaseMethod = { type: 'fixed', unit, value: migratedFixed };
+				chrome.storage.local.set({ settings });
+			}
 			increaseValueInput.value = settings.increaseMethod.value || 16;
 			unitSelect.value = settings.increaseMethod.unit || 'px';
 		}
@@ -94,7 +101,7 @@ function saveSettings() {
 		enabled: enabledToggle.checked,
 		threshold: threshold,
 		increaseMethod: {
-			type: increaseTypeSelect.value,
+			type: 'fixed',
 			unit: unitSelect.value,
 			value: parseInt(increaseValueInput.value)
 		},
@@ -170,7 +177,6 @@ if (toggleSlider) {
 }
 
 thresholdInput.addEventListener('change', saveSettings);
-increaseTypeSelect.addEventListener('change', saveSettings);
 increaseValueInput.addEventListener('change', saveSettings);
 unitSelect.addEventListener('change', saveSettings);
 listTypeSelect.addEventListener('change', saveSettings);

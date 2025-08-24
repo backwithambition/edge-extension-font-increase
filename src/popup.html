@@ -31,14 +31,19 @@
     /* 3 columns: method wider, value/unit narrower */
     .row-3 {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr; /* tweak as you like */
+      grid-template-columns: 1fr 1fr; /* fixed-only: value + unit */
       gap: 8px;                            /* space between columns */
       align-items: start;                  /* top-align each block */
       margin-top: 8px;
     }
 
     .ctrl { display: flex; flex-direction: column; min-width: 0; }
-    .ctrl > label { font-size: 12px; margin-bottom: 4px; line-height: 1.1; }
+    .ctrl > label {
+      font-size: 12px;
+      margin-bottom: 4px;
+      line-height: 1.1;
+      width: fit-content;
+    }
     .ctrl select,
     .ctrl input { width: 100%; height: 32px; padding: 4px 8px; }
 
@@ -48,6 +53,144 @@
       display: inline-block;
       font-size: 14px;
     }
+    
+    /* Tooltip label styling */
+    .tooltip-label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: inline;
+      font-size: 14px;
+      border-bottom: 1px dotted #0078d7;
+      cursor: help;
+      position: relative;
+    }
+
+    /* Tooltip styling */
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background-color: #333;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: normal;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      width: 240px;
+      max-width: calc(100vw - 40px);
+      text-align: left;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+    
+    /* Ensure tooltip stays within viewport bounds */
+    .tooltip {
+      right: auto;
+      transform: translateX(0);
+    }
+    
+    /* For labels that are too far right, align tooltip to the right edge of the label */
+    .ctrl .tooltip {
+      left: auto;
+      right: 0;
+      width: 200px; /* Smaller width for grid column tooltips */
+    }
+    
+    /* For the first column in grid, keep tooltip left-aligned but ensure it doesn't go off-screen */
+    .row-3 .ctrl:first-child .tooltip {
+      left: 0;
+      right: auto;
+      width: 200px;
+      min-width: 200px;
+      max-width: calc(100vw - 20px);
+    }
+    
+    /* For the second column in grid, position tooltip to not overflow left */
+    .row-3 .ctrl:nth-child(2) .tooltip {
+      left: -120px; /* Move tooltip left by a specific amount */
+      right: auto;
+      width: 180px;
+      min-width: 180px;
+    }
+    
+    /* Adjust arrow position for second column tooltip */
+    .row-3 .ctrl:nth-child(2) .tooltip::after {
+      left: 140px; /* Position arrow to point to the label */
+      right: auto;
+      margin-left: -5px;
+      margin-right: 0;
+    }
+    
+    /* Smart positioning for tooltips that would go off-screen */
+    .tooltip-label:first-child .tooltip,
+    .form-group:first-child .tooltip-label .tooltip {
+      bottom: auto;
+      top: 100%;
+      margin-bottom: 0;
+      margin-top: 8px;
+    }
+    
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 20px;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+    
+    /* Adjust arrow position for right-aligned tooltips */
+    .ctrl .tooltip::after {
+      left: auto;
+      right: 20px;
+      margin-left: 0;
+      margin-right: -5px;
+    }
+    
+    /* Adjust arrow for first column tooltips */
+    .row-3 .ctrl:first-child .tooltip::after {
+      left: 20px;
+      right: auto;
+      margin-left: -5px;
+      margin-right: 0;
+    }
+    
+    /* Arrow positioning for top tooltips */
+    .tooltip-label:first-child .tooltip::after,
+    .form-group:first-child .tooltip-label .tooltip::after {
+      top: auto;
+      bottom: 100%;
+      border-color: transparent transparent #333 transparent;
+    }
+    
+    .tooltip-label:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* Add hover rule for tooltip-header */
+    .tooltip-header:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* Special styling for section headers with tooltips */
+    .tooltip-header {
+      margin: 0;
+      font-size: 16px;
+      color: #333;
+      border-bottom: 1px dotted #0078d7;
+      cursor: help;
+      position: relative;
+      display: inline-block;
+    }
+    
     input[type="number"], select, input[type="text"] {
       width: 100%;
       padding: 8px 10px;
@@ -129,13 +272,22 @@
       color: red;
       margin-top: 5px;
     }
+    
+    /* Special styling for inline tooltip elements */
+    .inline-tooltip {
+      border-bottom: 1px dotted #0078d7;
+      cursor: help;
+      position: relative;
+    }
   </style>
 </head>
 <body>
   <h2>FontScaler</h2>
 
   <div class="form-group toggle">
-    <label for="enabled">Enable Extension</label>
+    <label for="enabled" class="tooltip-label">Enable Extension
+      <div class="tooltip">Toggle the extension on/off. When disabled, no font scaling will occur on any website.</div>
+    </label>
     <div class="toggle-switch">
       <input type="checkbox" id="enabled">
       <span class="slider"></span>
@@ -143,27 +295,25 @@
   </div>
 
   <div class="form-group">
-    <label for="threshold">Font Size Threshold (px)</label>
-    <input type="number" id="threshold" min="1" max="64"
-           title="Text elements with font size below this threshold will be scaled up">
+    <label for="threshold" class="tooltip-label">Font Size Threshold (px)
+      <div class="tooltip">Only text smaller than this size will be scaled up. Text already larger than this threshold will remain unchanged.</div>
+    </label>
+    <input type="number" id="threshold" min="1" max="64">
     <div id="threshold-error" class="error"></div>
   </div>
 
   <div class="row-3 form-group">
     <div class="ctrl">
-      <label for="increase-type">Increase Method</label>
-      <select id="increase-type">
-        <option value="fixed">Fixed Size</option>
-        <option value="multiplier">Multiplier</option>
-      </select>
-    </div>
-    <div class="ctrl">
-      <label for="increase-value">Value</label>
+      <label for="increase-value" class="tooltip-label">Fixed Font Size
+        <div class="tooltip">Exact font size to apply to text smaller than the threshold.</div>
+      </label>
       <input type="number" id="increase-value" min="1" step="1">
       <div id="value-error" class="error"></div>
     </div>
     <div class="ctrl">
-      <label for="unit">Unit</label>
+      <label for="unit" class="tooltip-label">Unit
+        <div class="tooltip">px: pixels (absolute), em: relative to parent font, rem: relative to root font size.</div>
+      </label>
       <select id="unit">
         <option value="px">px</option>
         <option value="em">em</option>
@@ -173,7 +323,9 @@
   </div>
 
   <div class="form-group">
-    <label for="list-type">Domain List Type</label>
+    <label for="list-type" class="tooltip-label">Domain List Type
+      <div class="tooltip">Whitelist: Apply scaling ONLY on listed domains. Blacklist: Apply scaling on ALL domains EXCEPT listed ones.</div>
+    </label>
     <select id="list-type">
       <option value="whitelist">Whitelist (apply only on these domains)</option>
       <option value="blacklist">Blacklist (don't apply on these domains)</option>
@@ -181,20 +333,24 @@
   </div>
 
   <div class="form-group">
-    <label for="new-domain">Domains</label>
+    <label for="new-domain" class="tooltip-label">Domains
+      <div class="tooltip">Add domains to control where font scaling applies. Use checkbox for regex patterns (e.g., .*\.example\.com matches all subdomains).</div>
+    </label>
     <div class="domain-list" id="domain-list"></div>
     <div style="display: flex; align-items: center; margin-top: 5px;">
       <input type="text" id="new-domain" placeholder="example.com" style="flex: 1; margin-right: 5px;">
-      <input type="checkbox" id="is-regex" title="Treat as regex">
+      <input type="checkbox" id="is-regex" title="Treat input as regex">
       <button id="add-domain">Add</button>
     </div>
     <div id="domain-error" class="error"></div>
   </div>
 
-  <!-- Other settings go here -->
-
   <div class="form-group" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9;">
-    <h3 style="margin-top: 0; font-size: 16px; color: #333; text-align: center;">Settings Management</h3>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 15px;">
+      <h3 class="tooltip-header">Settings Management
+        <div class="tooltip">Export saves your current settings to a file. Import loads settings from a previously saved file, replacing all current settings.</div>
+      </h3>
+    </div>
 
     <div style="display: flex; justify-content: space-between; gap: 10px;">
       <button id="export" style="flex: 1; background-color: #e6f2ff; color: #0078d7; border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px;">Export</button>

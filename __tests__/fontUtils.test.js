@@ -16,18 +16,9 @@ describe('Font Utilities', () => {
       expect(result).toBe('16px');
     });
     
-    test('should return multiplied size when type is multiplier', () => {
-      const result = calculateNewFontSize(12, { type: 'multiplier', value: 1.5, unit: 'px' });
-      expect(result).toBe('18px');
-    });
-    
     test('should use the provided unit', () => {
       expect(calculateNewFontSize(12, { type: 'fixed', value: 2, unit: 'em' })).toBe('2em');
       expect(calculateNewFontSize(12, { type: 'fixed', value: 2, unit: 'rem' })).toBe('2rem');
-    });
-    
-    test('should return null for invalid type', () => {
-      expect(calculateNewFontSize(12, { type: 'invalid', value: 16, unit: 'px' })).toBeNull();
     });
   });
   

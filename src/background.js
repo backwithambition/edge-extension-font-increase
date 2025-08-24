@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
 	enabled: true,
 	threshold: 9,
 	increaseMethod: {
-		type: 'fixed', // 'fixed' or 'multiplier'
+		type: 'fixed', // fixed-only
 		unit: 'px',    // 'px', 'em', or 'rem'
 		value: 16
 	},

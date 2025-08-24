@@ -6,8 +6,8 @@
  * Calculate the new font size based on the current size and increase method
  * @param {number} currentSize - Current font size in pixels
  * @param {Object} increaseMethod - Method configuration object
- * @param {string} increaseMethod.type - 'fixed' or 'multiplier'
- * @param {number} increaseMethod.value - The value to apply
+ * @param {string} increaseMethod.type - 'fixed' only
+ * @param {number} increaseMethod.value - The exact size to apply
  * @param {string} increaseMethod.unit - 'px', 'em', or 'rem'
  * @returns {string} - New font size with unit
  */
@@ -16,16 +16,11 @@ function calculateNewFontSize(currentSize, increaseMethod) {
     return null;
   }
   
-  let newSize;
-  
-  if (increaseMethod.type === 'fixed') {
-    newSize = increaseMethod.value;
-  } else if (increaseMethod.type === 'multiplier') {
-    newSize = currentSize * increaseMethod.value;
-  } else {
+  if (!increaseMethod.unit || typeof increaseMethod.value !== 'number') {
     return null;
   }
   
+  const newSize = increaseMethod.value;
   return `${newSize}${increaseMethod.unit}`;
 }
 

@@ -5,7 +5,7 @@ A browser extension that increases the font size of text on web pages.
 ## Features
 
 - Increase font size of text below a specified threshold
-- Choose between fixed size or multiplier methods
+- Set exact font size (fixed) for text below the threshold
 - Whitelist or blacklist domains
 - Import and export settings
 

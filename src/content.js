@@ -197,25 +197,35 @@ function increaseFontSize(settings) {
 			originalFontSizes.set(parentElement, currentSize);
 		}
 
-		// Apply font size change if below threshold
-		if (currentSize < settings.threshold) {
-			let newSize;
-			if (settings.increaseMethod.type === 'fixed') {
-				newSize = settings.increaseMethod.value;
-			} else {
-				newSize = currentSize * settings.increaseMethod.value;
-			}
-			parentElement.style.fontSize = `${newSize}${settings.increaseMethod.unit}`;
-			changedNodes++;
-		} else {
-			thresholdSkipped++;
-		}
+  // Apply font size change if below threshold
+        if (currentSize < settings.threshold) {
+            const newSize = settings.increaseMethod.value;
+            parentElement.style.fontSize = `${newSize}${settings.increaseMethod.unit}`;
+            changedNodes++;
+        } else {
+            thresholdSkipped++;
+        }
 	});
 
 	debugLog(`Font processing complete. Modified: ${changedNodes} elements`);
 }
 
 // Initialize and listen for settings changes
+function normalizeSettingsIfNeeded(settings) {
+	if (!settings || !settings.increaseMethod) return settings;
+	try {
+		if (settings.increaseMethod.type === 'multiplier') {
+			const threshold = settings.threshold || 9;
+			const multiplier = settings.increaseMethod.value || 1.5;
+			const unit = settings.increaseMethod.unit || 'px';
+			const migratedFixed = Math.max(1, Math.round(threshold * multiplier));
+			settings.increaseMethod = { type: 'fixed', unit, value: migratedFixed };
+			chrome.storage.local.set({ settings });
+		}
+	} catch (_) {}
+	return settings;
+}
+
 chrome.storage.local.get('settings', (result) => {
 	if (chrome.runtime.lastError) {
 		debugLog('Error retrieving settings:', chrome.runtime.lastError);
@@ -223,7 +233,8 @@ chrome.storage.local.get('settings', (result) => {
 	}
 
 	if (result.settings) {
-		increaseFontSize(result.settings);
+		const normalized = normalizeSettingsIfNeeded(result.settings);
+		increaseFontSize(normalized);
 	}
 });
 
@@ -232,7 +243,8 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
 	if (message.action === 'settingsUpdated') {
 		chrome.storage.local.get('settings', (result) => {
 			if (result.settings) {
-				increaseFontSize(result.settings);
+				const normalized = normalizeSettingsIfNeeded(result.settings);
+				increaseFontSize(normalized);
 			}
 		});
 	}
