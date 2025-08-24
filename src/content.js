@@ -24,6 +24,14 @@ debugLog(`CREATING NEW MAP`);
 function cleanupMemory() {
 	debugLog(`Cleaning up memory - clearing ${originalFontSizes.size} stored font sizes`);
 	originalFontSizes.clear();
+
+	// ADDED: disconnect deep observers
+	if (window.fontExtensionExtraObservers) {
+		for (const obs of window.fontExtensionExtraObservers) {
+			try { obs.disconnect(); } catch (_) {}
+		}
+		window.fontExtensionExtraObservers.clear?.();
+	}
 }
 
 // Add event listeners for page unload events to cleanup memory
@@ -37,6 +45,85 @@ document.addEventListener('visibilitychange', () => {
 		cleanupMemory();
 	}
 });
+
+/* ===================== deep traversal helpers ===================== */
+
+// Collect all traversal roots: main document, open ShadowRoots, and same-origin iframes
+function getAllTraversalRoots() {
+	const roots = new Set([document]);
+	const queue = [document];
+
+	while (queue.length) {
+		const root = queue.shift();
+		const scope = root instanceof Document || root instanceof ShadowRoot ? root : document;
+
+		// Query descendants safely
+		let nodes = [];
+		try { nodes = scope.querySelectorAll('*'); } catch (_) {}
+
+		for (const el of nodes) {
+			// open shadow roots
+			if (el.shadowRoot) {
+				if (!roots.has(el.shadowRoot)) {
+					roots.add(el.shadowRoot);
+					queue.push(el.shadowRoot);
+				}
+			}
+			// same-origin iframes
+			if (el.tagName === 'IFRAME') {
+				try {
+					const doc = el.contentDocument || el.contentWindow?.document;
+					if (doc && !roots.has(doc)) {
+						roots.add(doc);
+						queue.push(doc);
+					}
+				} catch (_) { /* cross-origin iframe -> ignore */ }
+			}
+		}
+	}
+	return [...roots];
+}
+
+// Create a list of text nodes across all roots (document, shadow DOMs, same-origin iframes)
+function collectTextNodesDeep() {
+	const results = [];
+	for (const root of getAllTraversalRoots()) {
+		const doc = root.ownerDocument || root; // Document for ShadowRoot, or the Document itself
+		let walker;
+		try {
+			walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+		} catch (_) { continue; }
+
+		let n;
+		while ((n = walker.nextNode())) {
+			if (n.nodeValue && n.nodeValue.trim().length > 0) {
+				results.push(n);
+			}
+		}
+	}
+	return results;
+}
+
+// Observe mutations in shadow roots and same-origin iframes as they appear
+const observedRoots = new WeakSet();
+window.fontExtensionExtraObservers = window.fontExtensionExtraObservers || new Set();
+
+function attachObserverToRoot(root) {
+	if (observedRoots.has(root)) return;
+	try {
+		const obs = new MutationObserver(onMutationsDebounced);
+		obs.observe(root, { childList: true, subtree: true });
+		window.fontExtensionExtraObservers.add(obs);
+		observedRoots.add(root);
+	} catch (_) {}
+}
+
+function ensureDeepObservers() {
+	for (const root of getAllTraversalRoots()) {
+		attachObserverToRoot(root instanceof Document ? (root.body || root) : root);
+	}
+}
+/* =================== end deep traversal helpers =================== */
 
 // Main function to increase font size
 function increaseFontSize(settings) {
@@ -85,17 +172,11 @@ function increaseFontSize(settings) {
 		return;
 	}
 
-	// Walk through all text nodes and apply font size changes
-	const textNodes = [];
-	const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-	// console.log(document.body);
+	// ensure we also watch late/hydrated content in shadow DOM/iframes
+	ensureDeepObservers();
 
-	let node;
-	while (node = walker.nextNode()) {
-		if (node.nodeValue.trim().length > 0) {
-			textNodes.push(node);
-		}
-	}
+	// Walk through all text nodes (document + shadow DOM + same-origin iframes) and apply font size changes
+	const textNodes = collectTextNodesDeep();
 
 	let changedNodes = 0;
 	let skippedNodes = 0;
@@ -168,7 +249,7 @@ function isExtensionContextValid() {
 
 // Handle dynamically loaded content
 let timeout;
-const observer = new MutationObserver((_mutations) => {
+function onMutationsDebounced() {
 	clearTimeout(timeout);
 	timeout = setTimeout(() => {
 		if (!isExtensionContextValid()) {
@@ -176,6 +257,9 @@ const observer = new MutationObserver((_mutations) => {
 			observer.disconnect();
 			return;
 		}
+
+		// new roots may have appeared; observe them too
+		ensureDeepObservers();
 
 		// Process mutations after a delay
 		try {
@@ -193,12 +277,17 @@ const observer = new MutationObserver((_mutations) => {
 			debugLog('Chrome API call failed:', error.message);
 		}
 	}, 100); // Debounce for 100 ms
-});
+}
+
+const observer = new MutationObserver((_mutations) => onMutationsDebounced());
 
 observer.observe(document.body, {
 	childList: true,
 	subtree: true
 });
+
+// also attach observers to existing deep roots at startup
+ensureDeepObservers();
 
 // Store reference for cleanup
 window.fontExtensionObserver = observer;
@@ -207,5 +296,11 @@ window.fontExtensionObserver = observer;
 window.addEventListener('beforeunload', () => {
 	if (window.fontExtensionObserver) {
 		window.fontExtensionObserver.disconnect();
+	}
+	// disconnect deep observers as well
+	if (window.fontExtensionExtraObservers) {
+		for (const obs of window.fontExtensionExtraObservers) {
+			try { obs.disconnect(); } catch (_) {}
+		}
 	}
 });
